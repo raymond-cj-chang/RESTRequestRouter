@@ -3,6 +3,8 @@ import web
 import json
 import simplejson
 
+web.config.debug = False
+
 urls = (
     '/(.*)', 'handleRequest',
 )
@@ -111,7 +113,10 @@ class handleRequest:
     def POST(self, method_id):
         i = web.input()
         data = web.data() # you can get data use this method
-        jsondata = simplejson.loads(data)
+        try:
+            jsondata = simplejson.loads(data)
+        except JSONDecodeError:
+            abort(500)
         num_recipients = len(jsondata["recipients"])
         request_distribution = self.assignRequestDistribution(num_recipients)
        
@@ -122,9 +127,7 @@ class handleRequest:
         routes["routes"] = self.assignRoutes(request_distribution, jsondata["recipients"])
         result.append(message)
         result.append(routes)
-        print json.dumps(result)
         return json.dumps(result)
-        #print json.dumps(self.assignRoutes(request_distribution, jsondata["recipients"]))
 
 if __name__ == "__main__":
     app.run()

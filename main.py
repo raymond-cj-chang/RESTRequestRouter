@@ -1,18 +1,23 @@
 #!/usr/bin/env python
+#Coding Challenge for SendHub written by Raymond Chang
 import web
 import json
 import simplejson
+
+web.config.debug = False
 
 urls = (
     '/(.*)', 'handleRequest',
 )
 
+#constants for request sizes
 SUPER = 25
 LARGE = 10
 MEDIUM = 5
 SMALL = 1
 REQUEST_SIZES = [SUPER, LARGE, MEDIUM, SMALL]
 
+#IP headers
 SUPER_IP_1 = "10.0.7."
 SUPER_IP_2 = "10.0.8."
 LARGE_IP_1 = "10.0.5."
@@ -26,6 +31,7 @@ SMALL_IP_2 = "10.0.2."
 app = web.application(urls, globals())
 
 class handleRequest:
+    #creates the request distribution using the greedy algorithim.
     def assignRequestDistribution(self, num_recipients):
         if(num_recipients == 0):
             return []
@@ -41,6 +47,9 @@ class handleRequest:
         num_small = 0;
         recipient_index = 0;
 
+        #brief overview: first check to see which IP header to use.
+        #then add the recipients for each IP address into dictionary.
+        #repeat until all recipients have been assigned to an IP address.
         for request in requestDistribution:
             if request == SUPER:
                 num_super += 1
@@ -110,21 +119,25 @@ class handleRequest:
 
     def POST(self, method_id):
         i = web.input()
-        data = web.data() # you can get data use this method
-        jsondata = simplejson.loads(data)
+        data = web.data() 
+        try: #not sure if this is the best way to handle input errors
+            jsondata = simplejson.loads(data)
+        except JSONDecodeError:
+            abort(500)
         num_recipients = len(jsondata["recipients"])
+        #gets the request distributions based on number of recipients
         request_distribution = self.assignRequestDistribution(num_recipients)
        
+        #empty arrays and dicts to preserve JSON formatting
         result = []
         routes = {}
         message = {}
         message["message"] = jsondata["message"]
+        #gets the routes based on the request distribution
         routes["routes"] = self.assignRoutes(request_distribution, jsondata["recipients"])
         result.append(message)
         result.append(routes)
-        print json.dumps(result)
         return json.dumps(result)
-        #print json.dumps(self.assignRoutes(request_distribution, jsondata["recipients"]))
 
 if __name__ == "__main__":
     app.run()

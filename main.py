@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-#Coding Challenge for SendHub written by Raymond Chang
 import web
 import json
 import simplejson
